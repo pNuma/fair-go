@@ -1,11 +1,35 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+import { ref } from 'vue';
+import { LMap, LTileLayer } from '@vue-leaflet/vue-leaflet';
+
+// 地図の初期状態
+const zoom = ref(13);
+const center = ref([35.681236, 139.767125] as [number, number]);
+</script>
 
 <template>
-  <h1>You did it!</h1>
-  <p>
-    Visit <a href="https://vuejs.org/" target="_blank" rel="noopener">vuejs.org</a> to read the
-    documentation
-  </p>
+  <header>
+    <h1>フェアに行こう</h1>
+  </header>
+  
+  <main>
+    <div class="map-wrapper">
+      <l-map ref="map" v-model:zoom="zoom" v-model:center="center" :useGlobalLeaflet="false">
+        
+        <l-tile-layer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          layer-type="base"
+          name="OpenStreetMap"
+        ></l-tile-layer>
+
+      </l-map>
+    </div>
+  </main>
 </template>
 
-<style scoped></style>
+<style scoped>
+.map-wrapper {
+  height: 600px;
+  width: 100%;
+}
+</style>
