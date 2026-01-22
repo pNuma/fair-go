@@ -22,6 +22,40 @@ const removeLocation = (index: number) => {
     locations.value.splice(index, 1);
   }
 };
+
+// 座標を取得する関数 (HeartRails Geo APIを使用)
+const getCoordinates = async (postcode: string) => {
+  const cleanPostcode = postcode.replace(/-/g, '');
+
+  try {
+    // HeartRails Geo API
+    const url = `https://geoapi.heartrails.com/api/json?method=searchByPostal&postal=${cleanPostcode}`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data.response && data.response.location && data.response.location.length > 0) {
+      const location = data.response.location[0];
+
+      return {
+        lat: parseFloat(location.y), // yが緯度
+        lng: parseFloat(location.x)  // xが経度
+      };
+    } else {
+      console.warn("場所が見つかりませんでした");
+      return null;
+    }
+  } catch (error) {
+    console.error("通信エラー", error);
+    return null;
+  }
+};
+
+
+// ▼ テスト用の関数
+const testApi = async () => {
+  const result = await getCoordinates('100-0001');
+  console.log('届いたデータ:', result); // コンソールに表示
+};
 </script>
 
 <template>
@@ -30,6 +64,7 @@ const removeLocation = (index: number) => {
   </header>
 
   <main>
+    <button @click="testApi">APIテスト（100-0001）</button>
     <div class="input-area">
       <div v-for="(item, index) in locations" :key="index" class="input-group">
 
@@ -46,6 +81,16 @@ const removeLocation = (index: number) => {
       <button @click="addLocation" class="add-btn">＋ 人数を増やす</button>
     </div>
     <div class="map-wrapper">
+    </div>
+
+
+    <div class="map-wrapper">
+      <l-map ref="map" v-model:zoom="zoom" v-model:center="center" :useGlobalLeaflet="false">
+
+        <l-tile-layer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" layer-type="base"
+          name="OpenStreetMap"></l-tile-layer>
+
+      </l-map>
     </div>
   </main>
 </template>
