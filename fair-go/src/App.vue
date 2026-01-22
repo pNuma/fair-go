@@ -50,12 +50,24 @@ const getCoordinates = async (postcode: string) => {
   }
 };
 
+// 取得した全員の座標リスト
+const markers = ref<{ lat: number, lng: number }[]>([]);
+
+const fetchAllLocations = async () => {
+  const promiseList = locations.value.map(loc => {
+    return getCoordinates(loc.postcode);
+  });
+
+  const results = await Promise.all(promiseList);
+  const validPoints = results.filter((p): p is { lat: number, lng: number } => p !== null);
+
+  markers.value = validPoints;
+  alert(`${validPoints.length} 件のデータを取得しました`);
+};
+
 
 // ▼ テスト用の関数
-const testApi = async () => {
-  const result = await getCoordinates('100-0001');
-  console.log('届いたデータ:', result); // コンソールに表示
-};
+
 </script>
 
 <template>
@@ -64,7 +76,13 @@ const testApi = async () => {
   </header>
 
   <main>
-    <button @click="testApi">APIテスト（100-0001）</button>
+    <div class="action-area">
+      <button @click="fetchAllLocations" class="calc-btn">
+        データ取得テスト
+      </button>
+    </div>
+
+
     <div class="input-area">
       <div v-for="(item, index) in locations" :key="index" class="input-group">
 
