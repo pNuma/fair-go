@@ -11,6 +11,8 @@ const locations = ref([
   { postcode: '' }
 ]);
 
+const midpoint = ref<{lat: number, lng: number} | null>(null);
+
 // 入力欄を増やす
 const addLocation = () => {
   locations.value.push({ postcode: '' });
@@ -50,6 +52,7 @@ const getCoordinates = async (postcode: string) => {
   }
 };
 
+
 // 取得した全員の座標リスト
 const markers = ref<{ lat: number, lng: number }[]>([]);
 
@@ -60,13 +63,41 @@ const fetchAllLocations = async () => {
 
   const results = await Promise.all(promiseList);
   const validPoints = results.filter((p): p is { lat: number, lng: number } => p !== null);
-
+  
   markers.value = validPoints;
-  alert(`${validPoints.length} 件のデータを取得しました`);
+  const center = calculateCentroid(validPoints);
+
+  if (center) {
+    midpoint.value = center;
+    alert(`重心\n緯度: ${center.lat}\n経度: ${center.lng}`);
+  } else {
+    alert("有効な座標が取れませんでした");
+  }
+}
+
+// 重心（平均）を計算する関数\\
+const calculateCentroid = (points: { lat: number, lng: number }[]) => {
+  if (points.length === 0) {
+    return null;
+  }
+
+  const total = points.reduce(
+    (acc, curr) => {
+      return {
+        lat: acc.lat + curr.lat, 
+        lng: acc.lng + curr.lng  
+      };
+    },
+    { lat: 0, lng: 0 }
+  );
+
+  const center = {
+    lat: total.lat / points.length,
+    lng: total.lng / points.length
+  };
+
+  return center;
 };
-
-
-// ▼ テスト用の関数
 
 </script>
 
