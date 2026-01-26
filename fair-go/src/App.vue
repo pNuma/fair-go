@@ -65,11 +65,11 @@ const fetchAllLocations = async () => {
   const validPoints = results.filter((p): p is { lat: number, lng: number } => p !== null);
 
   markers.value = validPoints;
-  const center = calculateCentroid(validPoints);
+  const centerResult = calculateCentroid(validPoints);
 
-  if (center) {
-    midpoint.value = center;
-    alert(`重心\n緯度: ${center.lat}\n経度: ${center.lng}`);
+  if (centerResult) {
+    midpoint.value = centerResult;
+    center.value = [centerResult.lat, centerResult.lng];
   } else {
     alert("有効な座標が取れませんでした");
   }
