@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue';
-import { LMap, LTileLayer } from '@vue-leaflet/vue-leaflet';
+import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
 
 // 地図の初期状態
 const zoom = ref(13);
@@ -11,7 +11,7 @@ const locations = ref([
   { postcode: '' }
 ]);
 
-const midpoint = ref<{lat: number, lng: number} | null>(null);
+const midpoint = ref<{ lat: number, lng: number } | null>(null);
 
 // 入力欄を増やす
 const addLocation = () => {
@@ -63,7 +63,7 @@ const fetchAllLocations = async () => {
 
   const results = await Promise.all(promiseList);
   const validPoints = results.filter((p): p is { lat: number, lng: number } => p !== null);
-  
+
   markers.value = validPoints;
   const center = calculateCentroid(validPoints);
 
@@ -84,8 +84,8 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
   const total = points.reduce(
     (acc, curr) => {
       return {
-        lat: acc.lat + curr.lat, 
-        lng: acc.lng + curr.lng  
+        lat: acc.lat + curr.lat,
+        lng: acc.lng + curr.lng
       };
     },
     { lat: 0, lng: 0 }
@@ -138,6 +138,14 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
 
         <l-tile-layer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" layer-type="base"
           name="OpenStreetMap"></l-tile-layer>
+
+        <l-marker v-for="(marker, index) in markers" :key="index" :lat-lng="[marker.lat, marker.lng]">
+          <l-popup>参加者 {{ index + 1 }}</l-popup>
+        </l-marker>
+
+        <l-marker v-if="midpoint" :lat-lng="[midpoint.lat, midpoint.lng]">
+          <l-popup>中間地点です</l-popup>
+        </l-marker>
 
       </l-map>
     </div>
