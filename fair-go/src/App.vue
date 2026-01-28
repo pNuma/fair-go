@@ -12,6 +12,7 @@ const locations = ref([
 ]);
 
 const midpoint = ref<{ lat: number, lng: number } | null>(null);
+const message = ref('');
 
 // 入力欄を増やす
 const addLocation = () => {
@@ -70,6 +71,7 @@ const fetchAllLocations = async () => {
   if (centerResult) {
     midpoint.value = centerResult;
     center.value = [centerResult.lat, centerResult.lng];
+    message.value = `重心は 緯度:${centerResult.lat.toFixed(3)}, 経度:${centerResult.lng.toFixed(3)} です`;
   } else {
     alert("有効な座標が取れませんでした");
   }
@@ -111,6 +113,7 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
       <button @click="fetchAllLocations" class="calc-btn">
         データ取得テスト
       </button>
+      <p v-if="message" class="result-message">{{ message }}</p>
     </div>
 
 
