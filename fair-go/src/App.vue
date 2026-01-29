@@ -54,6 +54,27 @@ const getCoordinates = async (postcode: string) => {
 };
 
 
+// 座標から住所を調べる関数（逆ジオコーディング）
+const getAddress = async (lat: number, lng: number) => {
+  try {
+    // xが経度, yが緯度です（HeartRailsのルール）
+    const url = `https://geoapi.heartrails.com/api/json?method=searchByGeoLocation&x=${lng}&y=${lat}`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+
+    // データがあれば、最初の候補の「市区町村 + 町域」を返します
+    if (data?.response?.location?.[0]) {
+      const loc = data.response.location[0];
+      return `${loc.city} ${loc.town}`;
+    }
+    return "海の上や山奥かも？";
+  } catch (err) {
+    return "住所不明";
+  }
+};
+
+
 // 取得した全員の座標リスト
 const markers = ref<{ lat: number, lng: number }[]>([]);
 
@@ -71,7 +92,13 @@ const fetchAllLocations = async () => {
   if (centerResult) {
     midpoint.value = centerResult;
     center.value = [centerResult.lat, centerResult.lng];
-    message.value = `重心は 緯度:${centerResult.lat.toFixed(3)}, 経度:${centerResult.lng.toFixed(3)} です`;
+    message.value = "中間地点の住所を検索中...";
+
+    // 2. 住所を取得
+    const addressName = await getAddress(centerResult.lat, centerResult.lng);
+
+    // 3. 住所付きのメッセージを表示
+    message.value = `中間地点は「${addressName}」付近です！`;
   } else {
     alert("有効な座標が取れませんでした");
   }
