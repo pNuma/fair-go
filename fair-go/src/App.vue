@@ -74,6 +74,21 @@ const getAddress = async (lat: number, lng: number) => {
   }
 };
 
+// リセットする関数
+const resetAll = () => {
+  locations.value = [
+    { postcode: '' },
+    { postcode: '' }
+  ];
+  
+  markers.value = [];
+  midpoint.value = null;
+  message.value = '';
+
+  // 地図を東京に戻す
+  center.value = [35.681236, 139.767125];
+  zoom.value = 13;
+};
 
 // 取得した全員の座標リスト
 const markers = ref<{ lat: number, lng: number }[]>([]);
@@ -138,9 +153,13 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
   <main>
     <div class="action-area">
       <button @click="fetchAllLocations" class="calc-btn">
-        データ取得テスト
+        集合場所を確認
       </button>
       <p v-if="message" class="result-message">{{ message }}</p>
+
+      <button @click="resetAll" class="reset-btn">
+    やり直す
+  </button>
     </div>
 
 
@@ -215,5 +234,18 @@ button {
 .map-wrapper {
   height: 600px;
   width: 100%;
+}
+
+.reset-btn {
+  margin-left: 10px; 
+  background-color: #888;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.reset-btn:hover {
+  background-color: #666;
 }
 </style>
