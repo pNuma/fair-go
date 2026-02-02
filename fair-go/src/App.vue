@@ -93,7 +93,22 @@ const resetAll = () => {
 // 取得した全員の座標リスト
 const markers = ref<{ lat: number, lng: number }[]>([]);
 
+//数字7桁か確認
+const isValidPostcode = (code: string) => {
+  const cleanCode = code.replace(/-/g, '');
+  return /^\d{7}$/.test(cleanCode);
+};
+
+
 const fetchAllLocations = async () => {
+
+  for (const [index, loc] of locations.value.entries()) {
+    if (!isValidPostcode(loc.postcode)) {
+      message.value = `エラー：参加者 ${index + 1} の郵便番号がおかしいようです（数字7桁を入力してください）`;
+      return;
+    }
+  }
+
   const promiseList = locations.value.map(loc => {
     return getCoordinates(loc.postcode);
   });
