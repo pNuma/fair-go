@@ -13,6 +13,7 @@ const locations = ref([
 
 const midpoint = ref<{ lat: number, lng: number } | null>(null);
 const message = ref('');
+const isLoading = ref(false);
 
 // 入力欄を増やす
 const addLocation = () => {
@@ -57,9 +58,9 @@ const getCoordinates = async (postcode: string) => {
 // 座標から住所を調べる関数（逆ジオコーディング）
 const getAddress = async (lat: number, lng: number) => {
   try {
-    // xが経度, yが緯度です（HeartRailsのルール）
+    // xが経度, yが緯度（HeartRailsのルール）
     const url = `https://geoapi.heartrails.com/api/json?method=searchByGeoLocation&x=${lng}&y=${lat}`;
-    
+
     const response = await fetch(url);
     const data = await response.json();
 
@@ -80,7 +81,7 @@ const resetAll = () => {
     { postcode: '' },
     { postcode: '' }
   ];
-  
+
   markers.value = [];
   midpoint.value = null;
   message.value = '';
@@ -109,29 +110,39 @@ const fetchAllLocations = async () => {
     }
   }
 
-  const promiseList = locations.value.map(loc => {
-    return getCoordinates(loc.postcode);
-  });
+  isLoading.value = true;
+  message.value = "計算中…";
 
-  const results = await Promise.all(promiseList);
-  const validPoints = results.filter((p): p is { lat: number, lng: number } => p !== null);
 
-  markers.value = validPoints;
-  const centerResult = calculateCentroid(validPoints);
+  try {
+    const promiseList = locations.value.map(loc => {
+      return getCoordinates(loc.postcode);
+    });
 
-  if (centerResult) {
-    midpoint.value = centerResult;
-    center.value = [centerResult.lat, centerResult.lng];
-    message.value = "中間地点の住所を検索中...";
+    const results = await Promise.all(promiseList);
+    const validPoints = results.filter((p): p is { lat: number, lng: number } => p !== null);
 
-    // 2. 住所を取得
-    const addressName = await getAddress(centerResult.lat, centerResult.lng);
+    markers.value = validPoints;
+    const centerResult = calculateCentroid(validPoints);
 
-    // 3. 住所付きのメッセージを表示
-    message.value = `中間地点は「${addressName}」付近です！`;
-  } else {
-    alert("有効な座標が取れませんでした");
+    if (centerResult) {
+      midpoint.value = centerResult;
+      center.value = [centerResult.lat, centerResult.lng];
+      message.value = "中間地点の住所を検索中...";
+
+      // 住所を取得
+      const addressName = await getAddress(centerResult.lat, centerResult.lng);
+      message.value = `中間地点は「${addressName}」付近です！`;
+    } else {
+      alert("有効な座標が取れませんでした");
+    }
+  } catch (error) {
+    console.error(error);
+    message.value = "予期せぬエラーが発生しました…";
+  } finally {
+    isLoading.value = false;
   }
+
 }
 
 // 重心（平均）を計算する関数\\
@@ -167,14 +178,14 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
 
   <main>
     <div class="action-area">
-      <button @click="fetchAllLocations" class="calc-btn">
-        集合場所を確認
+      <button @click="fetchAllLocations" class="calc-btn" :disabled="isLoading">
+        {{ isLoading ? '計算中...' : '集合場所を確認' }}
       </button>
       <p v-if="message" class="result-message">{{ message }}</p>
 
       <button @click="resetAll" class="reset-btn">
-    やり直す
-  </button>
+        やり直す
+      </button>
     </div>
 
 
@@ -252,7 +263,7 @@ button {
 }
 
 .reset-btn {
-  margin-left: 10px; 
+  margin-left: 10px;
   background-color: #888;
   color: white;
   padding: 10px 20px;
@@ -260,7 +271,14 @@ button {
   border-radius: 4px;
   cursor: pointer;
 }
+
 .reset-btn:hover {
   background-color: #666;
+}
+
+.calc-btn:disabled {
+  background-color: #ccc; 
+  cursor: not-allowed;    /* 禁止マーク */
+  opacity: 0.7;
 }
 </style>
