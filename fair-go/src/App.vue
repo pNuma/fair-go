@@ -177,40 +177,35 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
   </header>
 
   <main>
-    <div class="action-area">
-      <button @click="fetchAllLocations" class="calc-btn" :disabled="isLoading">
-        {{ isLoading ? '計算中...' : '集合場所を確認' }}
-      </button>
-      <p v-if="message" class="result-message">{{ message }}</p>
-
-      <button @click="resetAll" class="reset-btn">
-        やり直す
-      </button>
-    </div>
-
-
     <div class="input-area">
+      <h2>参加者の郵便番号</h2>
+
       <div v-for="(item, index) in locations" :key="index" class="input-group">
-
         <label>参加者 {{ index + 1 }}</label>
-
         <input v-model="item.postcode" type="text" placeholder="例: 1000001" maxlength="7">
 
         <button v-if="locations.length > 2" @click="removeLocation(index)" class="delete-btn">
-          削除
+          ✕
         </button>
-
       </div>
 
       <button @click="addLocation" class="add-btn">＋ 人数を増やす</button>
     </div>
-    <div class="map-wrapper">
+
+    <div class="action-area">
+      <button @click="fetchAllLocations" class="calc-btn" :disabled="isLoading">
+        {{ isLoading ? '計算中...' : '集合場所を確認' }}
+      </button>
+
+      <button @click="resetAll" class="reset-btn">
+        リセット
+      </button>
     </div>
 
+    <p v-if="message" class="result-message">{{ message }}</p>
 
     <div class="map-wrapper">
       <l-map ref="map" v-model:zoom="zoom" v-model:center="center" :useGlobalLeaflet="false">
-
         <l-tile-layer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" layer-type="base"
           name="OpenStreetMap"></l-tile-layer>
 
@@ -219,66 +214,136 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
         </l-marker>
 
         <l-marker v-if="midpoint" :lat-lng="[midpoint.lat, midpoint.lng]">
-          <l-popup>中間地点です</l-popup>
+          <l-popup>ここが中間地点です！</l-popup>
         </l-marker>
-
       </l-map>
     </div>
   </main>
 </template>
 
 <style scoped>
+header {
+  text-align: center;
+  padding: 20px 0;
+  background-color: #4CAF50;
+  color: white;
+  margin-bottom: 20px;
+}
+
+main {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* 入力エリア */
 .input-area {
   margin-bottom: 20px;
-  padding: 1rem;
-  background-color: #f9f9f9;
-  border-radius: 8px;
+  padding: 20px;
+  background-color: #f5f5f5;
+  border-radius: 12px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .input-group {
-  margin-bottom: 10px;
+  margin-bottom: 15px;
   display: flex;
   gap: 10px;
   align-items: center;
+  justify-content: center;
 }
 
 input {
-  padding: 5px;
+  padding: 8px;
   font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 120px;
 }
 
 button {
   cursor: pointer;
+  font-weight: bold;
+}
+
+.add-btn {
+  display: block;
+  margin: 10px auto 0;
+  background-color: #2196F3;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 20px;
 }
 
 .delete-btn {
-  background-color: #ffcccc;
-  border: none;
-  border-radius: 4px;
-}
-
-.map-wrapper {
-  height: 600px;
-  width: 100%;
-}
-
-.reset-btn {
-  margin-left: 10px;
-  background-color: #888;
+  background-color: #ff5252;
   color: white;
-  padding: 10px 20px;
   border: none;
-  border-radius: 4px;
-  cursor: pointer;
+  border-radius: 50%;
+  width: 30px;
+  height: 30px;
+  line-height: 30px;
+  padding: 0;
+  font-size: 12px;
 }
 
-.reset-btn:hover {
-  background-color: #666;
+.action-area {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.calc-btn {
+  background-color: #4CAF50;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.1s;
+}
+
+.calc-btn:active {
+  transform: translateY(2px);
 }
 
 .calc-btn:disabled {
-  background-color: #ccc; 
-  cursor: not-allowed;    /* 禁止マーク */
-  opacity: 0.7;
+  background-color: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
+  transform: none;
+}
+
+.reset-btn {
+  background-color: #757575;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+}
+
+.reset-btn:hover {
+  background-color: #616161;
+}
+
+/* メッセージ */
+.result-message {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #333;
+  margin-bottom: 20px;
+  font-weight: bold;
+}
+
+/* 地図 */
+.map-wrapper {
+  height: 500px;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid #ddd;
 }
 </style>
