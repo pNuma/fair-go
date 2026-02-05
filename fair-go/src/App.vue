@@ -172,178 +172,178 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
 </script>
 
 <template>
-  <header>
-    <h1>フェアに行こう</h1>
-  </header>
+  <div class="app-container">
+    <header>
+      <h1>フェアに行こう</h1>
+    </header>
 
-  <main>
-    <div class="input-area">
-      <h2>参加者の郵便番号</h2>
+    <main class="main-layout">
+      <div class="sidebar">
+        <div class="input-area">
+          <h2>参加者の郵便番号</h2>
+          <div v-for="(item, index) in locations" :key="index" class="input-group">
+            <label>参加者 {{ index + 1 }}</label>
+            <input v-model="item.postcode" type="text" placeholder="例: 1000001" maxlength="7">
+            <button v-if="locations.length > 2" @click="removeLocation(index)" class="delete-btn">✕</button>
+          </div>
+          <button @click="addLocation" class="add-btn">＋ 人数を増やす</button>
+        </div>
 
-      <div v-for="(item, index) in locations" :key="index" class="input-group">
-        <label>参加者 {{ index + 1 }}</label>
-        <input v-model="item.postcode" type="text" placeholder="例: 1000001" maxlength="7">
-
-        <button v-if="locations.length > 2" @click="removeLocation(index)" class="delete-btn">
-          ✕
-        </button>
+        <div class="action-area">
+          <button @click="fetchAllLocations" class="calc-btn" :disabled="isLoading">
+            {{ isLoading ? '計算中...' : '集合場所を確認' }}
+          </button>
+          <button @click="resetAll" class="reset-btn">リセット</button>
+        </div>
+        
+        <p v-if="message" class="result-message">{{ message }}</p>
       </div>
 
-      <button @click="addLocation" class="add-btn">＋ 人数を増やす</button>
-    </div>
+      <div class="map-container">
+        <l-map ref="map" v-model:zoom="zoom" v-model:center="center" :useGlobalLeaflet="false">
+          <l-tile-layer 
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
+            layer-type="base"
+            name="OpenStreetMap"
+          ></l-tile-layer>
 
-    <div class="action-area">
-      <button @click="fetchAllLocations" class="calc-btn" :disabled="isLoading">
-        {{ isLoading ? '計算中...' : '集合場所を確認' }}
-      </button>
+          <l-marker v-for="(marker, index) in markers" :key="index" :lat-lng="[marker.lat, marker.lng]">
+            <l-popup>参加者 {{ index + 1 }}</l-popup>
+          </l-marker>
 
-      <button @click="resetAll" class="reset-btn">
-        リセット
-      </button>
-    </div>
-
-    <p v-if="message" class="result-message">{{ message }}</p>
-
-    <div class="map-wrapper">
-      <l-map ref="map" v-model:zoom="zoom" v-model:center="center" :useGlobalLeaflet="false">
-        <l-tile-layer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" layer-type="base"
-          name="OpenStreetMap"></l-tile-layer>
-
-        <l-marker v-for="(marker, index) in markers" :key="index" :lat-lng="[marker.lat, marker.lng]">
-          <l-popup>参加者 {{ index + 1 }}</l-popup>
-        </l-marker>
-
-        <l-marker v-if="midpoint" :lat-lng="[midpoint.lat, midpoint.lng]">
-          <l-popup>ここが中間地点です！</l-popup>
-        </l-marker>
-      </l-map>
-    </div>
-  </main>
+          <l-marker v-if="midpoint" :lat-lng="[midpoint.lat, midpoint.lng]">
+            <l-popup>ここが中間地点</l-popup>
+          </l-marker>
+        </l-map>
+      </div>
+    </main>
+  </div>
 </template>
 
 <style scoped>
+/* アプリ全体 */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
 header {
   text-align: center;
-  padding: 20px 0;
+  padding: 15px 0;
   background-color: #4CAF50;
   color: white;
-  margin-bottom: 20px;
+  flex-shrink: 0;
 }
 
-main {
-  max-width: 800px;
-  margin: 0 auto;
-  padding: 0 20px;
+.main-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
 }
 
-/* 入力エリア */
-.input-area {
-  margin-bottom: 20px;
+/* 左サイドバー（入力欄） */
+.sidebar {
+  width: 350px;
   padding: 20px;
   background-color: #f5f5f5;
-  border-radius: 12px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+  z-index: 1000;
+}
+
+/* 右メインエリア（地図） */
+.map-container {
+  flex: 1; 
+  height: 100%;
+}
+
+.map-container :deep(.leaflet-container) {
+  height: 100% !important;
+  width: 100% !important;
 }
 
 .input-group {
   margin-bottom: 15px;
   display: flex;
-  gap: 10px;
+  gap: 5px;
   align-items: center;
-  justify-content: center;
 }
-
 input {
   padding: 8px;
-  font-size: 1rem;
   border: 1px solid #ccc;
   border-radius: 4px;
-  width: 120px;
+  width: 100%;
 }
-
-button {
-  cursor: pointer;
-  font-weight: bold;
-}
-
 .add-btn {
-  display: block;
-  margin: 10px auto 0;
+  width: 100%;
+  margin-top: 10px;
   background-color: #2196F3;
   color: white;
-  padding: 8px 16px;
+  padding: 8px;
   border: none;
-  border-radius: 20px;
+  border-radius: 4px;
 }
-
 .delete-btn {
   background-color: #ff5252;
   color: white;
   border: none;
-  border-radius: 50%;
+  border-radius: 4px;
   width: 30px;
   height: 30px;
-  line-height: 30px;
-  padding: 0;
-  font-size: 12px;
+  flex-shrink: 0;
 }
-
 .action-area {
+  margin-top: 20px;
   display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 20px;
+  gap: 10px;
 }
-
 .calc-btn {
+  flex: 2;
   background-color: #4CAF50;
   color: white;
-  padding: 12px 24px;
+  padding: 12px;
   border: none;
   border-radius: 8px;
-  font-size: 1.1rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.1s;
+  font-weight: bold;
 }
-
-.calc-btn:active {
-  transform: translateY(2px);
-}
-
 .calc-btn:disabled {
   background-color: #ccc;
   cursor: not-allowed;
-  box-shadow: none;
-  transform: none;
 }
-
 .reset-btn {
+  flex: 1;
   background-color: #757575;
   color: white;
-  padding: 10px 20px;
   border: none;
   border-radius: 8px;
 }
-
-.reset-btn:hover {
-  background-color: #616161;
-}
-
-/* メッセージ */
 .result-message {
-  text-align: center;
-  font-size: 1.1rem;
-  color: #333;
-  margin-bottom: 20px;
+  margin-top: 15px;
+  padding: 10px;
+  background: white;
+  border-radius: 4px;
   font-weight: bold;
+  text-align: center;
 }
 
-/* 地図 */
-.map-wrapper {
-  height: 500px;
-  width: 100%;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 2px solid #ddd;
+/* スマホ用 */
+@media (max-width: 768px) {
+  .main-layout {
+    flex-direction: column; /* 縦並び */
+    overflow: auto; /* 全体スクロールに戻す */
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    box-shadow: none;
+  }
+
+  .map-container {
+    height: 400px;
+    flex: none;
+  }
 }
 </style>
