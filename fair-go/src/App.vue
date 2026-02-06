@@ -177,26 +177,35 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
       <h1>フェアに行こう</h1>
     </header>
 
-    <main class="main-layout">
+    <div class="main-content">
       <div class="sidebar">
         <div class="input-area">
-          <h2>参加者の郵便番号</h2>
           <div v-for="(item, index) in locations" :key="index" class="input-group">
-            <label>参加者 {{ index + 1 }}</label>
-            <input v-model="item.postcode" type="text" placeholder="例: 1000001" maxlength="7">
-            <button v-if="locations.length > 2" @click="removeLocation(index)" class="delete-btn">✕</button>
+            <span class="badge">{{ index + 1 }}</span>
+            <input 
+              v-model="item.postcode" 
+              type="tel" 
+              placeholder="100-0005" 
+              maxlength="7"
+            >
+            <button 
+              v-if="locations.length > 2" 
+              @click="removeLocation(index)" 
+              class="delete-btn"
+            >✕</button>
           </div>
+          
           <button @click="addLocation" class="add-btn">＋ 人数を増やす</button>
         </div>
 
         <div class="action-area">
           <button @click="fetchAllLocations" class="calc-btn" :disabled="isLoading">
-            {{ isLoading ? '計算中...' : '集合場所を確認' }}
+            {{ isLoading ? '計算中...' : '集合場所を検索' }}
           </button>
           <button @click="resetAll" class="reset-btn">リセット</button>
         </div>
         
-        <p v-if="message" class="result-message">{{ message }}</p>
+        <p v-if="message" class="message-box">{{ message }}</p>
       </div>
 
       <div class="map-container">
@@ -216,134 +225,172 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
           </l-marker>
         </l-map>
       </div>
-    </main>
+    </div>
   </div>
 </template>
 
 <style scoped>
+* {
+  box-sizing: border-box;
+}
+
 /* アプリ全体 */
 .app-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
+  font-family: sans-serif;
+  background-color: #eee;
 }
 
 header {
-  text-align: center;
-  padding: 15px 0;
   background-color: #4CAF50;
   color: white;
+  text-align: center;
+  padding: 10px;
   flex-shrink: 0;
 }
+header h1 { margin: 0; font-size: 1.2rem; }
 
-.main-layout {
+/* メイン部分（サイドバー ＋ 地図） */
+.main-content {
   display: flex;
   flex: 1;
-  overflow: hidden;
+  
+  padding: 10px; 
+  gap: 10px;
+  
+  min-height: 0; 
 }
 
-/* 左サイドバー（入力欄） */
 .sidebar {
-  width: 350px;
-  padding: 20px;
-  background-color: #f5f5f5;
-  overflow-y: auto;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.1);
-  z-index: 1000;
+  flex: 1;
+  
+  background: #f9f9f9;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  border-radius: 8px;
+  
+  min-width: 0;
+  min-height: 0;
 }
 
-/* 右メインエリア（地図） */
-.map-container {
+/* 入力リスト部分だけスクロールさせる */
+.input-area {
   flex: 1; 
-  height: 100%;
-}
-
-.map-container :deep(.leaflet-container) {
-  height: 100% !important;
-  width: 100% !important;
+  overflow-y: auto;
+  padding: 15px;
 }
 
 .input-group {
-  margin-bottom: 15px;
   display: flex;
-  gap: 5px;
   align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
 }
+
+/* 番号バッジ */
+.badge {
+  background: #ddd;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+
+/* 入力欄 */
 input {
+  flex: 1; 
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  width: 100%;
+  font-size: 16px;
+  width: 100%; 
+  min-width: 0;
 }
+
+/* ボタン類のデザイン */
 .add-btn {
   width: 100%;
-  margin-top: 10px;
-  background-color: #2196F3;
-  color: white;
   padding: 8px;
-  border: none;
+  background: white;
+  border: 1px dashed #2196F3;
+  color: #2196F3;
   border-radius: 4px;
+  cursor: pointer;
 }
+
 .delete-btn {
-  background-color: #ff5252;
+  background: #ff5252;
   color: white;
   border: none;
   border-radius: 4px;
   width: 30px;
   height: 30px;
+  cursor: pointer;
   flex-shrink: 0;
 }
+
+/* 下部のボタンエリア */
 .action-area {
-  margin-top: 20px;
+  padding: 15px;
+  border-top: 1px solid #ddd;
   display: flex;
   gap: 10px;
+  background: #fff;
+  border-radius: 0 0 8px 8px;
 }
+
 .calc-btn {
   flex: 2;
-  background-color: #4CAF50;
+  background: #4CAF50;
   color: white;
   padding: 12px;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
   font-weight: bold;
 }
-.calc-btn:disabled {
-  background-color: #ccc;
-  cursor: not-allowed;
-}
+.calc-btn:disabled { background: #ccc; }
+
 .reset-btn {
   flex: 1;
-  background-color: #757575;
+  background: #888;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 6px;
 }
-.result-message {
-  margin-top: 15px;
+
+.message-box {
   padding: 10px;
-  background: white;
-  border-radius: 4px;
-  font-weight: bold;
   text-align: center;
+  font-size: 0.9rem;
+  background: #e8f5e9;
+  color: #2e7d32;
 }
 
-/* スマホ用 */
-@media (max-width: 768px) {
-  .main-layout {
-    flex-direction: column; /* 縦並び */
-    overflow: auto; /* 全体スクロールに戻す */
+/* 地図エリア */
+.map-container {
+  flex: 1;
+  
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+}
+
+/* ========== 縦画面（スマホ・タブレット縦） ========== */
+@media (orientation: portrait) {
+  
+  .main-content {
+    flex-direction: column; 
   }
 
-  .sidebar {
-    width: 100%;
-    height: auto;
-    overflow: visible;
-    box-shadow: none;
-  }
-
-  .map-container {
-    height: 400px;
-    flex: none;
-  }
+  .input-area { padding: 10px; }
+  .action-area { padding: 10px; }
 }
 </style>
