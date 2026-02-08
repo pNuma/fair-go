@@ -187,6 +187,7 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
               type="tel" 
               placeholder="100-0005" 
               maxlength="7"
+              @keydown.enter="fetchAllLocations"
             >
             <button 
               v-if="locations.length > 2" 
