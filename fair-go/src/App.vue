@@ -54,6 +54,27 @@ const getCoordinates = async (postcode: string) => {
   }
 };
 
+// 座標から最寄り駅を探す関数 (HeartRails Express API)
+const getNearestStation = async (lat: number, lng: number) => {
+  try {
+    const url = `https://express.heartrails.com/api/json?method=getStations&x=${lng}&y=${lat}`;
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    if (data?.response?.station?.[0]) {
+      const station = data.response.station[0];
+
+      return `${station.line} ${station.name}駅`;
+    }else{
+      console.warn("近くに駅が見つかりませんでした");
+      return null;
+    }
+  } catch (error) {
+    console.error("通信エラー", error);
+    return null;
+  }
+};
+
 
 // 座標から住所を調べる関数（逆ジオコーディング）
 const getAddress = async (lat: number, lng: number) => {
@@ -128,11 +149,14 @@ const fetchAllLocations = async () => {
     if (centerResult) {
       midpoint.value = centerResult;
       center.value = [centerResult.lat, centerResult.lng];
-      message.value = "中間地点の住所を検索中...";
+      message.value = "中間地点を検索中...";
 
       // 住所を取得
-      const addressName = await getAddress(centerResult.lat, centerResult.lng);
-      message.value = `中間地点は「${addressName}」付近です！`;
+      const [addressName, stationName] = await Promise.all([
+        getAddress(centerResult.lat, centerResult.lng),
+        getNearestStation(centerResult.lat, centerResult.lng)
+      ]);
+      message.value = `中間地点：${addressName} 付近 / 最寄り駅：${stationName}`;
     } else {
       alert("有効な座標が取れませんでした");
     }
@@ -185,7 +209,7 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
             <input 
               v-model="item.postcode" 
               type="tel" 
-              placeholder="100-0005" 
+              placeholder="1000005" 
               maxlength="7"
               @keydown.enter="fetchAllLocations"
             >
