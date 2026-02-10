@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
 
 // 地図の初期状態
@@ -58,14 +58,14 @@ const getCoordinates = async (postcode: string) => {
 const getNearestStation = async (lat: number, lng: number) => {
   try {
     const url = `https://express.heartrails.com/api/json?method=getStations&x=${lng}&y=${lat}`;
-    
+
     const response = await fetch(url);
     const data = await response.json();
     if (data?.response?.station?.[0]) {
       const station = data.response.station[0];
 
       return `${station.line} ${station.name}駅`;
-    }else{
+    } else {
       console.warn("近くに駅が見つかりませんでした");
       return null;
     }
@@ -111,6 +111,45 @@ const resetAll = () => {
   center.value = [35.681236, 139.767125];
   zoom.value = 13;
 };
+
+const updateUrl = () => {
+  const codes = locations.value
+    .map(l => l.postcode)
+    .filter(c => c)
+    .join(',');
+
+  const url = new URL(window.location.href);
+  url.searchParams.set('p', codes);
+
+  window.history.replaceState({}, '', url);
+};
+
+const shareResult = async () => {
+  const url = window.location.href;
+  const text = `中間地点はここ！\n${message.value}`;
+
+
+  try {
+    await navigator.clipboard.writeText(url);
+    alert('URLをコピー');
+  } catch (err) {
+    alert('コピーに失敗');
+  }
+
+};
+
+onMounted(() => {
+  const url = new URL(window.location.href);
+  const p = url.searchParams.get('p');
+
+  if (p) {
+    const codes = p.split(',');
+    locations.value = codes.map(code => ({ postcode: code }));
+
+    fetchAllLocations();
+  }
+});
+
 
 // 取得した全員の座標リスト
 const markers = ref<{ lat: number, lng: number }[]>([]);
@@ -169,7 +208,7 @@ const fetchAllLocations = async () => {
 
 }
 
-// 重心（平均）を計算する関数\\
+// 重心（平均）を計算する関数
 const calculateCentroid = (points: { lat: number, lng: number }[]) => {
   if (points.length === 0) {
     return null;
@@ -206,20 +245,11 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
         <div class="input-area">
           <div v-for="(item, index) in locations" :key="index" class="input-group">
             <span class="badge">{{ index + 1 }}</span>
-            <input 
-              v-model="item.postcode" 
-              type="tel" 
-              placeholder="1000005" 
-              maxlength="7"
-              @keydown.enter="fetchAllLocations"
-            >
-            <button 
-              v-if="locations.length > 2" 
-              @click="removeLocation(index)" 
-              class="delete-btn"
-            >✕</button>
+            <input v-model="item.postcode" type="tel" placeholder="1000005" maxlength="7"
+              @keydown.enter="fetchAllLocations">
+            <button v-if="locations.length > 2" @click="removeLocation(index)" class="delete-btn">✕</button>
           </div>
-          
+
           <button @click="addLocation" class="add-btn">＋ 人数を増やす</button>
         </div>
 
@@ -227,19 +257,18 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
           <button @click="fetchAllLocations" class="calc-btn" :disabled="isLoading">
             {{ isLoading ? '計算中...' : '集合場所を検索' }}
           </button>
+
+          <button v-if="midpoint" @click="shareResult" class="share-btn">シェア</button>
           <button @click="resetAll" class="reset-btn">リセット</button>
         </div>
-        
+
         <p v-if="message" class="message-box">{{ message }}</p>
       </div>
 
       <div class="map-container">
         <l-map ref="map" v-model:zoom="zoom" v-model:center="center" :useGlobalLeaflet="false">
-          <l-tile-layer 
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" 
-            layer-type="base"
-            name="OpenStreetMap"
-          ></l-tile-layer>
+          <l-tile-layer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" layer-type="base"
+            name="OpenStreetMap"></l-tile-layer>
 
           <l-marker v-for="(marker, index) in markers" :key="index" :lat-lng="[marker.lat, marker.lng]">
             <l-popup>参加者 {{ index + 1 }}</l-popup>
@@ -275,35 +304,39 @@ header {
   padding: 10px;
   flex-shrink: 0;
 }
-header h1 { margin: 0; font-size: 1.2rem; }
+
+header h1 {
+  margin: 0;
+  font-size: 1.2rem;
+}
 
 /* メイン部分（サイドバー ＋ 地図） */
 .main-content {
   display: flex;
   flex: 1;
-  
-  padding: 10px; 
+
+  padding: 10px;
   gap: 10px;
-  
-  min-height: 0; 
+
+  min-height: 0;
 }
 
 .sidebar {
   flex: 1;
-  
+
   background: #f9f9f9;
   display: flex;
   flex-direction: column;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
   border-radius: 8px;
-  
+
   min-width: 0;
   min-height: 0;
 }
 
 /* 入力リスト部分だけスクロールさせる */
 .input-area {
-  flex: 1; 
+  flex: 1;
   overflow-y: auto;
   padding: 15px;
 }
@@ -330,12 +363,12 @@ header h1 { margin: 0; font-size: 1.2rem; }
 
 /* 入力欄 */
 input {
-  flex: 1; 
+  flex: 1;
   padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 16px;
-  width: 100%; 
+  width: 100%;
   min-width: 0;
 }
 
@@ -380,7 +413,10 @@ input {
   border-radius: 6px;
   font-weight: bold;
 }
-.calc-btn:disabled { background: #ccc; }
+
+.calc-btn:disabled {
+  background: #ccc;
+}
 
 .reset-btn {
   flex: 1;
@@ -401,21 +437,26 @@ input {
 /* 地図エリア */
 .map-container {
   flex: 1;
-  
+
   position: relative;
   border-radius: 8px;
   overflow: hidden;
-  box-shadow: 0 0 5px rgba(0,0,0,0.1);
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 }
 
 /* ========== 縦画面（スマホ・タブレット縦） ========== */
 @media (orientation: portrait) {
-  
+
   .main-content {
-    flex-direction: column; 
+    flex-direction: column;
   }
 
-  .input-area { padding: 10px; }
-  .action-area { padding: 10px; }
+  .input-area {
+    padding: 10px;
+  }
+
+  .action-area {
+    padding: 10px;
+  }
 }
 </style>
