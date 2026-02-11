@@ -418,6 +418,17 @@ input {
   background: #ccc;
 }
 
+.share-btn {
+  background: #2196F3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  padding: 10px;
+  margin-left: 10px;
+}
+
 .reset-btn {
   flex: 1;
   background: #888;
