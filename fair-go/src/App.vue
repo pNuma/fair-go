@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { LMap, LTileLayer, LMarker, LPopup } from '@vue-leaflet/vue-leaflet';
+import { ref, onMounted, computed } from 'vue';
+import { LMap, LTileLayer, LMarker, LPopup, LPolyline } from '@vue-leaflet/vue-leaflet';
 
 // 地図の初期状態
 const zoom = ref(13);
@@ -154,6 +154,23 @@ onMounted(() => {
 // 取得した全員の座標リスト
 const markers = ref<{ lat: number, lng: number }[]>([]);
 
+
+// 📏 線を引く
+const lines = computed(() => {
+  if (!midpoint.value || markers.value.length === 0) {
+    return [];
+  }
+
+  const center = midpoint.value;
+
+  return markers.value.map(marker => {
+    const start = [marker.lat, marker.lng] as [number, number];
+    const end = [center.lat, center.lng] as [number, number];
+
+    return [start, end];
+  });
+});
+
 //数字7桁か確認
 const isValidPostcode = (code: string) => {
   const cleanCode = code.replace(/-/g, '');
@@ -269,6 +286,9 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
         <l-map ref="map" v-model:zoom="zoom" v-model:center="center" :useGlobalLeaflet="false">
           <l-tile-layer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" layer-type="base"
             name="OpenStreetMap"></l-tile-layer>
+
+          <l-polyline v-for="(line, index) in lines" :key="index" :lat-lngs="line" color="#2196F3" :weight="4"
+            dash-array="10, 10"></l-polyline>
 
           <l-marker v-for="(marker, index) in markers" :key="index" :lat-lng="[marker.lat, marker.lng]">
             <l-popup>参加者 {{ index + 1 }}</l-popup>
