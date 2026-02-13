@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { LMap, LTileLayer, LMarker, LPopup, LPolyline } from '@vue-leaflet/vue-leaflet';
+import L from 'leaflet';
 
 // 地図の初期状態
 const zoom = ref(13);
@@ -154,8 +155,30 @@ onMounted(() => {
 // 取得した全員の座標リスト
 const markers = ref<{ lat: number, lng: number }[]>([]);
 
+// SVGマーカーを作成
+const createSvgIcon = (color: string): any => {
+  
+  const svgHtml = `
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="30" height="45" style="filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">
+      <path fill="${color}" d="M172.268 501.67C26.97 291.031 0 269.413 0 192 0 85.961 85.961 0 192 0s192 85.961 192 192c0 77.413-26.97 99.031-172.268 309.67-9.535 13.774-29.93 13.773-39.464 0z"/>
+      <circle cx="192" cy="192" r="90" fill="white"/>
+    </svg>
+  `;
 
-// 📏 線を引く
+  return L.divIcon({
+    className: 'custom-svg-icon',
+    html: svgHtml,
+    iconSize: [30, 45],
+    iconAnchor: [15, 45],
+    popupAnchor: [0, -45]
+  });
+};
+
+
+const blueIcon = createSvgIcon('#2196F3');
+const redIcon = createSvgIcon('#FF5252');
+
+
 const lines = computed(() => {
   if (!midpoint.value || markers.value.length === 0) {
     return [];
@@ -290,11 +313,12 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
           <l-polyline v-for="(line, index) in lines" :key="index" :lat-lngs="line" color="#2196F3" :weight="4"
             dash-array="10, 10"></l-polyline>
 
-          <l-marker v-for="(marker, index) in markers" :key="index" :lat-lng="[marker.lat, marker.lng]">
+          <l-marker v-for="(marker, index) in markers" :key="index" :lat-lng="[marker.lat, marker.lng]"
+            :icon="blueIcon">
             <l-popup>参加者 {{ index + 1 }}</l-popup>
           </l-marker>
 
-          <l-marker v-if="midpoint" :lat-lng="[midpoint.lat, midpoint.lng]">
+          <l-marker v-if="midpoint" :lat-lng="[midpoint.lat, midpoint.lng]" :icon="redIcon">
             <l-popup>ここが中間地点</l-popup>
           </l-marker>
         </l-map>
@@ -489,5 +513,16 @@ input {
   .action-area {
     padding: 10px;
   }
+}
+
+
+/* マーカー用のスタイル */
+:deep(.custom-svg-icon) {
+  background: none;
+  border: none;
+}
+
+:deep(.marker-svg-shadow) {
+  filter: drop-shadow(2px 4px 4px rgba(0, 0, 0, 0.4));
 }
 </style>
