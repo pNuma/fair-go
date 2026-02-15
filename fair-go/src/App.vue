@@ -28,12 +28,11 @@ const removeLocation = (index: number) => {
   }
 };
 
-// 座標を取得する関数 (HeartRails Geo APIを使用)
+// 座標を取得する関数 (HeartRails Geo API)
 const getCoordinates = async (postcode: string) => {
   const cleanPostcode = postcode.replace(/-/g, '');
 
   try {
-    // HeartRails Geo API
     const url = `https://geoapi.heartrails.com/api/json?method=searchByPostal&postal=${cleanPostcode}`;
 
     const response = await fetch(url);
@@ -77,10 +76,10 @@ const getNearestStation = async (lat: number, lng: number) => {
 };
 
 
-// 座標から住所を調べる関数（逆ジオコーディング）
+// 座標から住所を調べる関数
 const getAddress = async (lat: number, lng: number) => {
   try {
-    // xが経度, yが緯度（HeartRailsのルール）
+    // xが経度, yが緯度
     const url = `https://geoapi.heartrails.com/api/json?method=searchByGeoLocation&x=${lng}&y=${lat}`;
 
     const response = await fetch(url);
@@ -499,9 +498,8 @@ input {
   box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
 }
 
-/* ========== 縦画面（スマホ・タブレット縦） ========== */
+/* 縦画面（スマホ・タブレット縦）*/
 @media (orientation: portrait) {
-
   .main-content {
     flex-direction: column;
   }
@@ -514,7 +512,6 @@ input {
     padding: 10px;
   }
 }
-
 
 /* マーカー用のスタイル */
 :deep(.custom-svg-icon) {
