@@ -156,7 +156,7 @@ const markers = ref<{ lat: number, lng: number }[]>([]);
 
 // SVGマーカーを作成
 const createSvgIcon = (color: string): any => {
-  
+
   const svgHtml = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="30" height="45" style="filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.4));">
       <path fill="${color}" d="M172.268 501.67C26.97 291.031 0 269.413 0 192 0 85.961 85.961 0 192 0s192 85.961 192 192c0 77.413-26.97 99.031-172.268 309.67-9.535 13.774-29.93 13.773-39.464 0z"/>
@@ -307,8 +307,8 @@ const calculateCentroid = (points: { lat: number, lng: number }[]) => {
 
       <div class="map-container">
         <l-map ref="map" v-model:zoom="zoom" v-model:center="center" :useGlobalLeaflet="false">
-          <l-tile-layer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" layer-type="base"
-            name="OpenStreetMap"></l-tile-layer>
+          <l-tile-layer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" layer-type="base" name="OpenStreetMap"
+            attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"></l-tile-layer>
 
           <l-polyline v-for="(line, index) in lines" :key="index" :lat-lngs="line" color="#2196F3" :weight="4"
             dash-array="10, 10"></l-polyline>
