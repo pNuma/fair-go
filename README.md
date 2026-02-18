@@ -9,7 +9,7 @@ Vue.jsの練習用プロジェクトです。
 
 ## 機能
 * **中間地点の算出**: 入力された地点の重心（中間地点）を計算し、マーカーを表示
-* **結果の共有**: 検索結果（入力された郵便番号）をURLパラメータとして保持し、リンク共有が可能
+* **結果の共有**: 入力された郵便番号をURLパラメータとして保持し、リンク共有が可能
 
 ## 使用技術
 
@@ -24,6 +24,11 @@ Vue.jsの練習用プロジェクトです。
     * 地図の表示にOpenStreetMapのタイルデータを使用しています。
     * Copyright: © OpenStreetMap contributors
     * License: [ODbL](https://www.openstreetmap.org/copyright)
+
+### 地図表示ライブラリ
+* **Leaflet**
+    * 地図の描画エンジンとして使用しています。
+    * License: BSD 2-Clause License
 
 ### 住所・駅・座標検索API
 * **HeartRails Geo API / HeartRails Express**
