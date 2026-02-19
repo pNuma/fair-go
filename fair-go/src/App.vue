@@ -235,7 +235,8 @@ const fetchAllLocations = async () => {
         getNearestStation(centerResult.lat, centerResult.lng)
       ]);
       updateUrl();
-      message.value = `中間地点：${addressName} 付近 / 最寄り駅：${stationName}`;
+      const stationText = stationName ? stationName : "なし";
+      message.value = `中間地点：${addressName} 付近 / 最寄り駅：${stationText}`;
     } else {
       alert("有効な座標が取れませんでした");
     }
